@@ -52,5 +52,5 @@ curl -X POST "http://localhost:8000/convert" \
 ## API Documentation
 
 Once the server is running, you can access:
-- Interactive API docs (Swagger UI): `http://localhost:8000/docs`
-- Alternative API docs (ReDoc): `http://localhost:8000/redoc` 
+- Interactive API docs (Swagger UI): `http://your-server-url.com/docs`
+- Alternative API docs (ReDoc): `http://your-server-url.com/redoc` 
