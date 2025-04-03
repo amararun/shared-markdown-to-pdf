@@ -1,0 +1,222 @@
+openapi: 3.1.0
+info:
+  title: GENAI App Webhook
+  description: A webhook to trigger actions based on the type field.
+  version: 1.0.0
+servers:
+  - url: https://n8n-iii2.onrender.com
+    description: Webhook server
+paths:
+  /webhook-test/22855856-f389-41c0-85c1-21ba38ebd4a4:
+
+    post:
+      operationId: triggerAction
+      summary: Triggers actions based on the type field
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+              properties:
+                type:
+                  type: string
+                  enum: [update, report, deck, mdtopdf, dbquery]
+                  description: >
+                    Action type.
+                    - Use `update` to update the tracker with all required fields.
+                    - Use `report` to send the tracker in report format. This is the default if type is not specified.
+                    - Use `deck` to send the tracker in deck format.
+                    - Use `mdtopdf` to convert markdown text to PDF.
+                    - Use `dbquery` to execute database queries.
+                text:
+                  type: string
+                  description: Markdown formatted text to be converted to PDF. Required when `type` is `mdtopdf`.
+                data:
+                  type: object
+                  properties:
+                    # For type=update properties
+                    genaiAppHeading:
+                      type: string
+                      description: Short heading up to 10 words. Required when `type` is `update`.
+                    description:
+                      type: string
+                      description: Detailed description up to 50 words. Required when `type` is `update`.
+                    mainUseCase:
+                      type: string
+                      description: Main use case up to 50 words. Required when `type` is `update`.
+                    gptUseCase1:
+                      type: string
+                      description: GPT suggested totally new use case in analytics. Required when `type` is `update`.
+                    gptUseCase2:
+                      type: string
+                      description: GPT suggested totally new use case in analytics. Required when `type` is `update`.
+                    gptUseCase3:
+                      type: string
+                      description: GPT suggested totally new use case in analytics. Required when `type` is `update`.
+                    effort:
+                      type: string
+                      enum: [LOW, MEDIUM, HIGH]
+                      description: Effort level (LOW, MEDIUM, HIGH). Required when `type` is `update`.
+                    cost:
+                      type: string
+                      enum: [LOW, MED, HIGH]
+                      description: Cost level (LOW, MED, HIGH). Required when `type` is `update`.
+                    # For type=dbquery properties
+                    host:
+                      type: string
+                      description: Host for the database connection. Required when `type` is `dbquery`.
+                    database:
+                      type: string
+                      description: Database name for the connection. Required when `type` is `dbquery`.
+                    user:
+                      type: string
+                      description: Username for the database connection. Required when `type` is `dbquery`.
+                    password:
+                      type: string
+                      description: Password for the database connection. Required when `type` is `dbquery`.
+                    port:
+                      type: integer
+                      description: Port for the database connection (default 5432 for PostgreSQL, 3306 for MySQL). Required when `type` is `dbquery`.
+                      default: 5432
+                    db_type:
+                      type: string
+                      enum: [postgresql, mysql]
+                      description: Type of database to connect to. Required when `type` is `dbquery`.
+                    sqlquery:
+                      type: string
+                      description: SQL query to execute on the database. Required when `type` is `dbquery`.
+              allOf:
+                - if:
+                    properties:
+                      type:
+                        const: update
+                  then:
+                    required:
+                      - data
+                    properties:
+                      data:
+                        required:
+                          - genaiAppHeading
+                          - description
+                          - mainUseCase
+                          - gptUseCase1
+                          - gptUseCase2
+                          - gptUseCase3
+                          - effort
+                          - cost
+                - if:
+                    properties:
+                      type:
+                        const: report
+                  then:
+                    properties:
+                      data: {}
+                    required: []
+                - if:
+                    properties:
+                      type:
+                        const: deck
+                  then:
+                    properties:
+                      data: {}
+                    required: []
+                - if:
+                    properties:
+                      type:
+                        const: mdtopdf
+                  then:
+                    required:
+                      - text
+                - if:
+                    properties:
+                      type:
+                        const: dbquery
+                  then:
+                    required:
+                      - data
+                    properties:
+                      data:
+                        required:
+                          - host
+                          - database
+                          - user
+                          - password
+                          - port
+                          - db_type
+                          - sqlquery
+                - if:
+                    not:
+                      properties:
+                        type:
+                          enum: [update, report, deck, mdtopdf, dbquery]
+                  then:
+                    properties:
+                      type:
+                        const: report
+
+      responses:
+        '200':
+          description: Successful action trigger
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: Response for mdtopdf type
+                    properties:
+                      pdf_url:
+                        type: string
+                        description: URL to download the generated PDF file (valid for 1 hour)
+                      message:
+                        type: string
+                        description: Success message or additional information
+                    required:
+                      - pdf_url
+                      - message
+                  - type: object
+                    description: Response for dbquery type
+                    properties:
+                      results:
+                        type: array
+                        description: Array of query results
+                        items:
+                          type: object
+                          additionalProperties: true
+                      message:
+                        type: string
+                        description: Success message or additional information
+                      rowCount:
+                        type: integer
+                        description: Number of rows returned or affected
+                    required:
+                      - results
+                      - message
+                  - type: object
+                    description: Response for other types
+                    properties:
+                      message:
+                        type: string
+                        description: Success message or additional information
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing what went wrong
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing what went wrong
