@@ -89,3 +89,8 @@ The API includes CORS middleware configuration for secure cross-origin requests.
 ## 📫 Support
 
 For issues and feature requests, please open an issue in the repository. 
+## Author
+
+Built by [Amar Harolikar](https://www.linkedin.com/in/amarharolikar/)
+
+Explore 30+ open source AI tools for analytics, databases & automation at [tigzig.com](https://tigzig.com)
